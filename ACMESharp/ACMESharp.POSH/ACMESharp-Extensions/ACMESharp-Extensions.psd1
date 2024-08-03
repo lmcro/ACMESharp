@@ -9,15 +9,15 @@
 ##    %SystemRoot%\syswow64\WindowsPowerShell\v1.0\powershell.exe
 
 @{
-	RootModule = 'ACMESharp-Providers.psm1'
-	ModuleVersion = '0.8.1'
+	RootModule = 'ACMESharp-Extensions.psm1'
+	ModuleVersion = '0.9.2'
 	GUID = 'D404364B-EBEF-4FB9-BB5A-F30F912D876C'
 	
 	Author = 'https://github.com/ebekker'
 
 	CompanyName = 'https://github.com/ebekker/ACMESharp'
 
-	Copyright = '(c) 2016 Eugene Bekker. All rights reserved.'	
+	Copyright = '(c) 2017 Eugene Bekker. All rights reserved.'	
 
 	Description = "Client library for the ACME protocol, which is used to interopertate with the Let's Encrypt project's CA server and any other ACME-compliant server."
 

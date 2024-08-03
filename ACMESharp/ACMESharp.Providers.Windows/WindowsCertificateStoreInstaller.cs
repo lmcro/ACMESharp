@@ -1,16 +1,14 @@
 ﻿using ACMESharp.Installer;
+using ACMESharp.PKI;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ACMESharp.PKI;
-using System.Security.Cryptography.X509Certificates;
 using System.IO;
+using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 
 namespace ACMESharp.Providers.Windows
 {
-    public class WindowsCertificateStoreInstaller : IInstaller
+	public class WindowsCertificateStoreInstaller : IInstaller
     {
         public StoreLocation StoreLocation
         { get; set; } = StoreLocation.CurrentUser;
@@ -39,14 +37,14 @@ namespace ACMESharp.Providers.Windows
                     if (StoreLocation == StoreLocation.LocalMachine)
                         flag = X509KeyStorageFlags.MachineKeySet;
 
-                    var cert = new X509Certificate2(ms.ToArray(), string.Empty,
-                            X509KeyStorageFlags.PersistKeySet | flag |
-                            X509KeyStorageFlags.Exportable);
+					var cert = new X509Certificate2(ms.ToArray(), string.Empty,
+							X509KeyStorageFlags.PersistKeySet | flag |
+							X509KeyStorageFlags.Exportable);
 
-                    if (!string.IsNullOrEmpty(FriendlyName))
-                        cert.FriendlyName = FriendlyName;
+					if (!string.IsNullOrEmpty(FriendlyName))
+						cert.FriendlyName = FriendlyName;
 
-                    store.Add(cert);
+					store.Add(cert);
                 }
             }
             finally

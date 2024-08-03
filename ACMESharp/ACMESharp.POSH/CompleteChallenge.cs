@@ -1,33 +1,27 @@
 ﻿using ACMESharp.POSH.Util;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Management.Automation;
-using System.Text;
-using System.Text.RegularExpressions;
-using ACMESharp.DNS;
-using ACMESharp.WebServer;
-using System.Collections;
-using ACMESharp.Vault.Profile;
 using ACMESharp.Util;
-using ACMESharp.ACME;
+using ACMESharp.Vault.Profile;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
+using System.Management.Automation;
 
 namespace ACMESharp.POSH
 {
-    /// <summary>
-    /// <para type="synopsis">Completes a Challenge using a prescribed Handler.</para>
-    /// <para type="description">
-    ///   Use this cmdlet to complete a Challenge associated with an Identifier
-    ///   defined in an ACMESharp Vault that has been submitted for verification
-    ///   to an ACME CA Server.
-    /// </para>
-    /// <para type="link">Get-ChallengeHandlerProfile</para>
-    /// <para type="link">Set-ChallengeHandlerProfile</para>
-    /// </summary>
-    [Cmdlet(VerbsLifecycle.Complete, "Challenge")]
-    public class CompleteChallenge : Cmdlet
-    {
+	/// <summary>
+	/// <para type="synopsis">Completes a Challenge using a prescribed Handler.</para>
+	/// <para type="description">
+	///   Use this cmdlet to complete a Challenge associated with an Identifier
+	///   defined in an ACMESharp Vault that has been submitted for verification
+	///   to an ACME CA Server.
+	/// </para>
+	/// <para type="link">Get-ChallengeHandlerProfile</para>
+	/// <para type="link">Set-ChallengeHandlerProfile</para>
+	/// </summary>
+	[Cmdlet(VerbsLifecycle.Complete, "Challenge")]
+    public class CompleteChallenge : AcmeCmdlet
+	{
         public const string PSET_CHALLENGE_HANDLER_INLINE = "ChallengeHandlerInline";
         public const string PSET_CHALLENGE_HANDLER_PROFILE = "ChallengeHandlerProfile";
 
@@ -115,7 +109,8 @@ namespace ACMESharp.POSH
         /// </para>
         /// </summary>
         [Parameter]
-        public SwitchParameter Regenerate
+		[Alias("Regenerate")]
+        public SwitchParameter RepeatDecoder
         { get; set; }
 
         /// <summary>
@@ -126,7 +121,7 @@ namespace ACMESharp.POSH
         /// </para>
         /// </summary>
         [Parameter]
-        public SwitchParameter Repeat
+        public SwitchParameter RepeatHandler
         { get; set; }
 
         /// <summary>
@@ -277,7 +272,7 @@ namespace ACMESharp.POSH
 
                 try
                 {
-                    if (challenge == null || Regenerate)
+                    if (challenge == null || RepeatDecoder)
                     {
                         using (var c = ClientHelper.GetClient(v, ri))
                         {
@@ -289,7 +284,7 @@ namespace ACMESharp.POSH
                         }
                     }
 
-                    if (CleanUp && (Repeat || challengeCleanedUp == null))
+                    if (CleanUp && (RepeatHandler || challengeCleanedUp == null))
                     {
                         using (var c = ClientHelper.GetClient(v, ri))
                         {
@@ -301,7 +296,7 @@ namespace ACMESharp.POSH
                             ii.ChallengeCleanedUp[challengeType] = DateTime.Now;
                         }
                     }
-                    else if (Repeat || challengeCompleted == null)
+                    else if (RepeatHandler || challengeCompleted == null)
                     {
                         using (var c = ClientHelper.GetClient(v, ri))
                         {

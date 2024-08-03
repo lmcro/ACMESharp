@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using ACMESharp.ACME;
 using ACMESharp.Ext;
+using System.Collections.Generic;
 
-namespace ACMESharp.ACME.Providers
+namespace ACMESharp.Providers.Windows
 {
 	/// <summary>
 	/// Provider for a Challenge Handler that outputs the manual steps
@@ -18,6 +15,7 @@ namespace ACMESharp.ACME.Providers
 	/// </remarks>
 	[ChallengeHandlerProvider("msdns",
 		ChallengeTypeKind.DNS,
+		isCleanUpSupported: false,
 		Label = "Microsoft DNS Provider",
 		Description = "A microsoft dns provider for handling Challenges." +
 					  " This provider supports the DNS" +

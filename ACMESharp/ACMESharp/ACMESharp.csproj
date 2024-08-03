@@ -46,18 +46,16 @@
       <HintPath>..\packages\AWSSDK.S3.3.3.1.1\lib\net45\AWSSDK.S3.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="log4net, Version=1.2.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
-      <HintPath>..\packages\log4net.2.0.5\lib\net45-full\log4net.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NLog.4.4.12\lib\net45\NLog.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Management" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -85,6 +83,7 @@
     <Compile Include="ACME\ChallengeDecoderExtManager.cs" />
     <Compile Include="ACME\ChallengeAnswer.cs" />
     <Compile Include="ACME\ChallengeHandlerProviderAttribute.cs" />
+    <Compile Include="ACME\ChallengeHandlingContext.cs" />
     <Compile Include="ACME\IChallengeDecoderProviderInfo.cs" />
     <Compile Include="ACME\IChallengeHandlerProviderInfo.cs" />
     <Compile Include="ACME\Providers\DnsChallengeDecoder.cs" />
@@ -95,8 +94,8 @@
     <Compile Include="ACME\Providers\HttpChallengeDecoderProvider.cs" />
     <Compile Include="ACME\Providers\ManualChallengeHandler.cs" />
     <Compile Include="ACME\Providers\ManualChallengeHandlerProvider.cs" />
-    <Compile Include="ACME\Providers\MSDNSChallengeHandler.cs" />
-    <Compile Include="ACME\Providers\MSDNSChallengeHandlerProvider.cs" />
+    <Compile Include="ACME\Providers\TlsSniChallengeDecoder.cs" />
+    <Compile Include="ACME\Providers\TlsSniChallengeDecoderProvider.cs" />
     <Compile Include="Certificate.cs" />
     <Compile Include="AuthorizationState.cs" />
     <Compile Include="CertificateRequest.cs" />
@@ -111,6 +110,7 @@
     <Compile Include="Ext\ExtManagerAttribute.cs" />
     <Compile Include="Ext\NamedInfo.cs" />
     <Compile Include="Ext\ParameterDetail.cs" />
+    <Compile Include="Ext\ParameterExtensions.cs" />
     <Compile Include="HTTP\Link.cs" />
     <Compile Include="HTTP\LinkCollection.cs" />
     <Compile Include="Installer\IInstaller.cs" />
@@ -133,6 +133,7 @@
     <Compile Include="Messages\NewCertRequest.cs" />
     <Compile Include="Messages\ProblemDetailResponse.cs" />
     <Compile Include="Messages\RegResponse.cs" />
+    <Compile Include="Messages\RevokeCertRequest.cs" />
     <Compile Include="Messages\UpdateRegRequest.cs" />
     <Compile Include="Messages\AnswerHttpChallengeRequest.cs" />
     <Compile Include="PKI\Crt.cs" />

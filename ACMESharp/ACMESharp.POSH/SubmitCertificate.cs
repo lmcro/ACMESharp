@@ -1,22 +1,21 @@
-﻿using ACMESharp.POSH.Util;
+﻿using ACMESharp.JOSE;
+using ACMESharp.PKI;
+using ACMESharp.PKI.RSA;
+using ACMESharp.POSH.Util;
+using ACMESharp.Util;
 using ACMESharp.Vault;
 using ACMESharp.Vault.Model;
 using System;
 using System.IO;
 using System.Management.Automation;
 using System.Security.Cryptography.X509Certificates;
-using ACMESharp.JOSE;
-using ACMESharp.PKI;
-using ACMESharp.Util;
-using System.Collections;
-using ACMESharp.PKI.RSA;
 
 namespace ACMESharp.POSH
 {
-    [Cmdlet(VerbsLifecycle.Submit, "Certificate")]
+	[Cmdlet(VerbsLifecycle.Submit, "Certificate")]
     [OutputType(typeof(CertificateInfo))]
-    public class SubmitCertificate : Cmdlet
-    {
+    public class SubmitCertificate : AcmeCmdlet
+	{
         /// <summary>
         /// <para type="description">
         ///     A reference (ID or alias) to a previously defined Certificate request.
@@ -110,7 +109,7 @@ namespace ACMESharp.POSH
                         var csrGenAsset = vlt.CreateAsset(VaultAssetType.CsrGen, csrGenFile, getOrCreate: Force);
                         var csrPemAsset = vlt.CreateAsset(VaultAssetType.CsrPem, csrPemFile, getOrCreate: Force);
 
-                        var genKeyParams = new RsaPrivateKeyParams();
+                        var genKeyParams = new RsaPrivateKeyParams {NumBits = ci.NumBits};
 
                         var genKey = cp.GeneratePrivateKey(genKeyParams);
                         using (var s = vlt.SaveAsset(keyGenAsset))

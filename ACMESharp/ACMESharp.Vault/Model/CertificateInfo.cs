@@ -57,5 +57,10 @@ namespace ACMESharp.Vault.Model
 
         public string SignatureAlgorithm
         { get; set; }
+
+        public DateTime? RevokedAt
+        { get; set; }
+
+        public int NumBits { get; set; } = 2048;
     }
 }

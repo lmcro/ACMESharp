@@ -27,16 +27,18 @@ IF "%BUILDNO%"=="" SET BUILDNO=0
 ECHO Building %PRJ_ARG% (build #%BUILDNO%)
 
 REM --- Try to find NuGet on the path
-FOR /F "delims=" %%i IN ('where nuget.* /F') DO set NUGET=%%i
+FOR /F "delims=" %%i IN ('where nuget /F') DO set NUGET=%%i
 
 REM --- If not found, look for NuGet at fixed location (in AppVeyor)
-IF NOT EXIST "%NUGET%" SET NUGET="%THIS_DIR%..\..\..\nuget\nuget.exe"
-IF NOT EXIST %NUGET% (
+ECHO NUGET=%NUGET%
+IF NOT EXIST "%NUGET%" SET NUGET=%THIS_DIR%..\..\..\nuget\nuget.exe
+IF NOT EXIST "%NUGET%" (
 	ECHO --^> ERROR: Cannot Find Nuget: Please ensure Nuget is installed and available on your path
 	ECHO.
 	GOTO :eof
 )
 
+SET NUGET=%NUGET:"=%
 ECHO Using NuGet located at %NUGET%
 
 SET NUGET_PRJ="%THIS_DIR%%PRJ_ARG%\%PRJ_ARG%.csproj"
@@ -48,12 +50,15 @@ SET NUGET_PROPS=nugetCwd=%CD%
 SET NUGET_PROPS=%NUGET_PROPS%;nugetDate=%DATE%
 SET NUGET_PROPS=%NUGET_PROPS%;nugetTime=%Time%
 SET NUGET_PROPS=%NUGET_PROPS%;buildNum=%BUILDNO%
-SET NUGET_PROPS=%NUGET_PROPS%;versionLabel=-EA
+
+@REM We used to append the '-EA' suffix to the version which caused NuGet.org to flag it as
+@REM PRERELEASE, but now that we're stable enough, I think it's safe to remove this caution
+@REM SET NUGET_PROPS=%NUGET_PROPS%;versionLabel=-EA
 
 :Execute_NuGet
 ECHO *********************
 ECHO ** Executing NuGet:  %NUGET% pack -Properties "%NUGET_PROPS%" -OutputDirectory %NUGET_OUT% %NUGET_PRJ% %NUGET_ARGS%
 ECHO *********************
-%NUGET% pack -Properties "%NUGET_PROPS%" -OutputDirectory %NUGET_OUT% %NUGET_PRJ% %NUGET_ARGS%
+"%NUGET%" pack -Properties "%NUGET_PROPS%" -OutputDirectory %NUGET_OUT% %NUGET_PRJ% %NUGET_ARGS%
 
 ECHO.

@@ -1,15 +1,12 @@
-﻿using ACMESharp.Installer;
+﻿using ACMESharp.Ext;
+using ACMESharp.Installer;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ACMESharp.Ext;
 using System.Security.Cryptography.X509Certificates;
 
 namespace ACMESharp.Providers.Windows
 {
-    [InstallerProvider("win-cert",
+	[InstallerProvider("win-cert",
         Aliases = new[] { "cert-store", "certificate-store"},
         Label = "Windows Certificate Store",
         Description = "Installer supprts importing certificate to the"
@@ -51,22 +48,12 @@ namespace ACMESharp.Providers.Windows
             if (initParams == null)
                 initParams = new Dictionary<string, object>();
 
-            // Required params
-            // (none)
-
-            // Optional params
-            if (initParams.ContainsKey(STORE_LOCATION.Name))
-                inst.StoreLocation = (StoreLocation)Enum.Parse(
-                        typeof(StoreLocation),
-                        (string)initParams[STORE_LOCATION.Name],
-                        true);
-            if (initParams.ContainsKey(STORE_NAME.Name))
-                inst.StoreName = (StoreName)Enum.Parse(
-                        typeof(StoreName),
-                        (string)initParams[STORE_NAME.Name],
-                        true);
-            if (initParams.ContainsKey(FRIENDLY_NAME.Name))
-                inst.FriendlyName = (string)initParams[FRIENDLY_NAME.Name];
+			initParams.GetParameter(STORE_LOCATION,
+					(StoreLocation x) => inst.StoreLocation = x);
+			initParams.GetParameter(STORE_NAME,
+					(StoreName x) => inst.StoreName = x);
+			initParams.GetParameter(FRIENDLY_NAME,
+					(string x) => inst.FriendlyName = x);
 
             return inst;
         }

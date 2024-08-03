@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -21,20 +22,23 @@ namespace ACMESharp.ACME.Providers
         #region -- Fields --
 
         private Stream _stream = null;
-        private TextWriter _writer = Console.Out;
+		private TextWriter _writer = null;
 
         #endregion -- Fields --
 
         #region -- Properties --
 
         public string WriteOutPath
-        { get; private set; } = STD_OUT;
+        { get; private set; }
 
         public bool Append
         { get; private set; }
 
         public bool Overwrite
         { get; private set; }
+
+		public bool OutputJson
+		{ get; set; }
 
         public bool IsDisposed
         { get; private set; }
@@ -48,8 +52,13 @@ namespace ACMESharp.ACME.Providers
             var priorS = _stream;
             var priorW = _writer;
 
-            switch (path)
+            switch (path ?? string.Empty)
             {
+				case "":
+					_writer = null;
+					_stream = null;
+					break;
+
                 case STD_OUT:
                     _writer = Console.Out;
                     _stream = null;
@@ -94,88 +103,269 @@ namespace ACMESharp.ACME.Providers
             }
         }
 
-        public void Handle(Challenge c)
+        public void Handle(ChallengeHandlingContext ctx)
         {
             AssertNotDisposed();
 
-            var dnsChallenge = c as DnsChallenge;
-            var httpChallenge = c as HttpChallenge;
+            var dnsChallenge = ctx.Challenge as DnsChallenge;
+            var httpChallenge = ctx.Challenge as HttpChallenge;
+            var tlsSniChallenge = ctx.Challenge as TlsSniChallenge;
 
             if (dnsChallenge != null)
             {
-                _writer.WriteLine($"== Manual Challenge Handler - DNS ==");
-                _writer.WriteLine($"  * Handle Time:      [{DateTime.Now}]");
-                _writer.WriteLine($"  * Challenge Token:  [{dnsChallenge.Token}]");
-                _writer.WriteLine($"To complete this Challenge please create a new Resource");
-                _writer.WriteLine($"Record (RR) with the following characteristics:");
-                _writer.WriteLine($"  * RR Type:  [TXT]");
-                _writer.WriteLine($"  * RR Name:  [{dnsChallenge.RecordName}]");
-                _writer.WriteLine($"  * RR Value: [{dnsChallenge.RecordValue}]");
-                _writer.WriteLine($"------------------------------------");
-                _writer.Flush();
+				var json = new
+				{
+					Label = "Manual Challenge Handler - DNS",
+					HandleTime = DateTime.Now,
+					ChallengeToken = dnsChallenge.Token,
+					ChallengeType = "DNS",
+					Description = new[]
+					{
+						"To complete this Challenge please create a new Resource",
+						"Record (RR) with the following characteristics:",
+					},
+					DnsDetails = new
+					{
+						RRType = "TXT",
+						RRName = dnsChallenge.RecordName,
+						RRValue = dnsChallenge.RecordValue,
+					}
+				};
+
+				// Compute the output message
+				var message = OutputJson
+					? JsonConvert.SerializeObject(json, Formatting.Indented)
+					: $@"== {json.Label} ==
+  * Handle Time:      [{json.HandleTime}]
+  * Challenge Token:  [{json.ChallengeToken}]
+
+{string.Join(Environment.NewLine, json.Description)}
+  * RR Type:  [{json.DnsDetails.RRType}]
+  * RR Name:  [{json.DnsDetails.RRName}]
+  * RR Value: [{json.DnsDetails.RRValue}]
+------------------------------------
+";
+
+				ctx.Out.WriteLine(message);
+				_writer?.WriteLine(message);
+                _writer?.Flush();
             }
             else if (httpChallenge != null)
             {
-                _writer.WriteLine($"== Manual Challenge Handler - HTTP ==");
-                _writer.WriteLine($"  * Handle Time:      [{DateTime.Now}]");
-                _writer.WriteLine($"  * Challenge Token:  [{httpChallenge.Token}]");
-                _writer.WriteLine($"To complete this Challenge please create a new file");
-                _writer.WriteLine($"under the server that is responding to the hostname");
-                _writer.WriteLine($"and path given with the following characteristics:");
-                _writer.WriteLine($"  * HTTP URL:     [{httpChallenge.FileUrl}]");
-                _writer.WriteLine($"  * File Path:    [{httpChallenge.FilePath}]");
-                _writer.WriteLine($"  * File Content: [{httpChallenge.FileContent}]");
-                _writer.WriteLine($"  * MIME Type:    [text/plain]");
-                _writer.WriteLine($"------------------------------------");
-                _writer.Flush();
+				var json = new
+				{
+					Label = "Manual Challenge Handler - HTTP",
+					HandleTime = DateTime.Now,
+					ChallengeToken = httpChallenge.Token,
+					ChallengeType = "HTTP",
+					Description = new[]
+					{
+						"To complete this Challenge please create a new file",
+						"under the server that is responding to the hostname",
+						"and path given with the following characteristics:",
+					},
+					HttpDetails = new
+					{
+						HttpUrl = httpChallenge.FileUrl,
+						FilePath = httpChallenge.FilePath,
+						FileContent = httpChallenge.FileContent,
+						MimeType = "text/plain",
+					}
+				};
+
+				// Compute the output message
+				var message = OutputJson
+					? JsonConvert.SerializeObject(json, Formatting.Indented)
+					: $@"== {json.Label} ==
+  * Handle Time:      [{json.HandleTime}]
+  * Challenge Token:  [{json.ChallengeToken}]
+
+{string.Join(Environment.NewLine, json.Description)}
+  * HTTP URL:     [{json.HttpDetails.HttpUrl}]
+  * File Path:    [{json.HttpDetails.FilePath}]
+  * File Content: [{json.HttpDetails.FileContent}]
+  * MIME Type:    [{json.HttpDetails.MimeType}]
+------------------------------------										
+";
+
+				ctx.Out.WriteLine(message);
+				_writer?.WriteLine(message);
+				_writer?.Flush();
+            }
+            else if (tlsSniChallenge != null)
+            {
+                var json = new
+                {
+                    Label = "Manual Challenge Handler - TLS-SNI",
+                    HandleTime = DateTime.Now,
+                    ChallengeToken = tlsSniChallenge.Token,
+                    ChallengeType = "TLS-SNI",
+                    Description = new[]
+                    {
+                        "To complete this Challenge please configure your web server",
+                        "with TLS-SNI self-signed certificates for the following token:",
+                    },
+                    TlsSniDetails = new
+                    {
+                        Token = tlsSniChallenge.Token,
+                        IterationCount = tlsSniChallenge.IterationCount,
+                    }
+                };
+
+                // Compute the output message
+                var message = OutputJson
+                    ? JsonConvert.SerializeObject(json, Formatting.Indented)
+                    : $@"== {json.Label} ==
+  * Handle Time:      [{json.HandleTime}]
+  * Challenge Token:  [{json.ChallengeToken}]
+
+{string.Join(Environment.NewLine, json.Description)}
+  * Token:        [{json.TlsSniDetails.Token}]
+  * Iterations:   [{json.TlsSniDetails.IterationCount}]
+------------------------------------										
+";
+
+                ctx.Out.WriteLine(message);
+                _writer?.WriteLine(message);
+                _writer?.Flush();
             }
             else
             {
                 var ex = new InvalidOperationException("unsupported Challenge type");
-                ex.Data["challengeType"] = c.GetType();
+                ex.Data["challengeType"] = ctx.GetType();
                 throw ex;
             }
         }
 
-        public void CleanUp(Challenge c)
+        public void CleanUp(ChallengeHandlingContext ctx)
         {
             AssertNotDisposed();
 
-            var dnsChallenge = c as DnsChallenge;
-            var httpChallenge = c as HttpChallenge;
+            var dnsChallenge = ctx.Challenge as DnsChallenge;
+            var httpChallenge = ctx.Challenge as HttpChallenge;
+            var tlsSniChallenge = ctx.Challenge as TlsSniChallenge;
 
             if (dnsChallenge != null)
             {
-                _writer.WriteLine($"== Manual Challenge Handler - DNS ==");
-                _writer.WriteLine($"  * CleanUp Time:     [{DateTime.Now}]");
-                _writer.WriteLine($"  * Challenge Token:  [{dnsChallenge.Token}]");
-                _writer.WriteLine($"The Challenge has been completed -- you can now remove the");
-                _writer.WriteLine($"Resource Record created previously with the following");
-                _writer.WriteLine($"characteristics:");
-                _writer.WriteLine($"  * RR Type:  [TXT]");
-                _writer.WriteLine($"  * RR Name:  [{dnsChallenge.RecordName}]");
-                _writer.WriteLine($"  * RR Value: [{dnsChallenge.RecordValue}]");
-                _writer.WriteLine($"------------------------------------");
-                _writer.Flush();
+				var json = new
+				{
+					Label = "Manual Challenge Handler - DNS",
+					CleanUpTime = DateTime.Now,
+					ChallengeToken = dnsChallenge.Token,
+					ChallengeType = "DNS",
+					Description = new[]
+					{
+						"The Challenge has been completed -- you can now remove the",
+						"Resource Record created previously with the following",
+						"characteristics:",
+					},
+					DnsDetails = new
+					{
+						RRType = "TXT",
+						RRName = dnsChallenge.RecordName,
+						RRValue = dnsChallenge.RecordValue,
+					}
+				};
+
+				// Compute the output message
+				var message = OutputJson
+					? JsonConvert.SerializeObject(json, Formatting.Indented)
+					: $@"== {json.Label} ==
+  * CleanUp Time:     [{json.CleanUpTime}]
+  * Challenge Token:  [{json.ChallengeToken}]
+
+{string.Join(Environment.NewLine, json.Description)}
+  * RR Type:  [{json.DnsDetails.RRType}]
+  * RR Name:  [{json.DnsDetails.RRName}]
+  * RR Value: [{json.DnsDetails.RRValue}]
+------------------------------------
+";
+
+				ctx.Out.WriteLine(message);
+				_writer?.WriteLine(message);
+                _writer?.Flush();
             }
             else if (httpChallenge != null)
             {
-                _writer.WriteLine($"== Manual Challenge Handler - HTTP ==");
-                _writer.WriteLine($"  * CleanUp Time:     [{DateTime.Now}]");
-                _writer.WriteLine($"  * Challenge Token:  [{httpChallenge.Token}]");
-                _writer.WriteLine($"The Challenge has been completed -- you can now remove the");
-                _writer.WriteLine($"file created previously with the following characteristics:");
-                _writer.WriteLine($"  * HTTP URL:     [{httpChallenge.FileUrl}]");
-                _writer.WriteLine($"  * File Path:    [{httpChallenge.FilePath}]");
-                _writer.WriteLine($"  * File Content: [{httpChallenge.FileContent}]");
-                _writer.WriteLine($"  * MIME Type:    [text/plain]");
-                _writer.WriteLine($"------------------------------------");
-                _writer.Flush();
+				var json = new
+				{
+					Label = "Manual Challenge Handler - HTTP",
+					CleanUpTime = DateTime.Now,
+					ChallengeToken = httpChallenge.Token,
+					ChallengeType = "HTTP",
+					Description = new[]
+					{
+						"The Challenge has been completed -- you can now remove the",
+						"file created previously with the following characteristics:",
+					},
+					HttpDetails = new
+					{
+						HttpUrl = httpChallenge.FileUrl,
+						FilePath = httpChallenge.FilePath,
+						FileContent = httpChallenge.FileContent,
+						MimeType = "text/plain",
+					}
+				};
+
+				// Compute the output message
+				var message = OutputJson
+					? JsonConvert.SerializeObject(json, Formatting.Indented)
+					: $@"== {json.Label} ==
+  * CleanUp Time:     [{json.CleanUpTime}]
+  * Challenge Token:  [{json.ChallengeToken}]
+
+{string.Join(Environment.NewLine, json.Description)}
+  * HTTP URL:     [{httpChallenge.FileUrl}]
+  * File Path:    [{httpChallenge.FilePath}]
+  * File Content: [{httpChallenge.FileContent}]
+  * MIME Type:    [text/plain]
+------------------------------------
+";
+				ctx.Out.WriteLine(message);
+				_writer?.WriteLine(message);
+				_writer?.Flush();
+            }
+            else if (tlsSniChallenge != null)
+            {
+                var json = new
+                {
+                    Label = "Manual Challenge Handler - TLS-SNI",
+                    CleanUpTime = DateTime.Now,
+                    ChallengeToken = httpChallenge.Token,
+                    ChallengeType = "TLS-SNI",
+                    Description = new[]
+                    {
+                        "The Challenge has been completed -- you can now remove the",
+                        "self-signed certificates and SNI configuration on your",
+                        "web server for the following token:",
+                    },
+                    TlsSniDetails = new
+                    {
+                        Token = tlsSniChallenge.Token,
+                        IterationCount = tlsSniChallenge.IterationCount,
+                    }
+                };
+
+                // Compute the output message
+                var message = OutputJson
+                    ? JsonConvert.SerializeObject(json, Formatting.Indented)
+                    : $@"== {json.Label} ==
+  * CleanUp Time:     [{json.CleanUpTime}]
+  * Challenge Token:  [{json.ChallengeToken}]
+
+{string.Join(Environment.NewLine, json.Description)}
+  * Token:        [{json.TlsSniDetails.Token}]
+  * Iterations:   [{json.TlsSniDetails.IterationCount}]
+------------------------------------
+";
+                ctx.Out.WriteLine(message);
+                _writer?.WriteLine(message);
+                _writer?.Flush();
             }
             else
             {
                 var ex = new InvalidOperationException("unsupported Challenge type");
-                ex.Data["challengeType"] = c.GetType();
+                ex.Data["challengeType"] = ctx.GetType();
                 throw ex;
             }
         }

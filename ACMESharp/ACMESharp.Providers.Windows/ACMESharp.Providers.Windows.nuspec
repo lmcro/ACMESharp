@@ -13,11 +13,11 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
     <releaseNotes>Early-access release of ACMESharp Providers Lib for Microsoft Windows.</releaseNotes>
-    <copyright>Copyright &#169; 2016 Eugene Bekker</copyright>
+    <copyright>Copyright &#169; 2017 Eugene Bekker</copyright>
     <tags>pki ssl tls security certificates letsencrypt acme acmesharp</tags>
 
     <dependencies>
-      <dependency id="ACMESharp" version="8.2.0" />
+      <dependency id="ACMESharp" version="0.9.0.0" />
     </dependencies>
    </metadata>
 </package>

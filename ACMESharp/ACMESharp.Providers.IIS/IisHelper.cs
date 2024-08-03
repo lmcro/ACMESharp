@@ -94,7 +94,7 @@ namespace ACMESharp.Providers.IIS
             }
         }
 
-        public static void UpdateSiteBinding(IisWebSiteBinding binding, string certStore, byte[] certHash)
+        public static void UpdateSiteBinding(IisWebSiteBinding binding, string certStore, byte[] certHash, bool keepExistingSslFlags = false)
         {
             using (var iis = new ServerManager())
             {
@@ -120,10 +120,13 @@ namespace ACMESharp.Providers.IIS
                         ++bindingCount;
                         b.CertificateStoreName = certStore;
                         b.CertificateHash = certHash;
-                        if (binding.BindingHostRequired.GetValueOrDefault() && GetIisVersion().Major >= 8)
-                            b.SetAttributeValue("sslFlags", 1);
-                        else
-                            b.SetAttributeValue("sslFlags", 3);
+                        if (!keepExistingSslFlags) 
+                        {
+                            if (binding.BindingHostRequired.GetValueOrDefault() && GetIisVersion().Major >= 8)
+                                b.SetAttributeValue("sslFlags", 1);
+                            else
+                                b.SetAttributeValue("sslFlags", 3);
+                        }
                     }
                 }
 
@@ -203,11 +206,11 @@ namespace ACMESharp.Providers.IIS
                         .With(nameof(webSiteRef), webSiteRef);
 
             // Make sure all the bindings are for the same site
-            var siteId = sitesById.First().SiteId;
-                if (sitesById.Any(_ => _.SiteId != siteId))
+            var siteId = resolvedSites.First().SiteId;
+                if (resolvedSites.Any(_ => _.SiteId != siteId))
                     throw new InvalidOperationException("duplicate sites resolved for referenced site ID")
                             .With(nameof(webSiteRef), webSiteRef)
-                            .With("count", sitesById.Length);
+                            .With("count", resolvedSites.Count());
 
             return resolvedSites;
         }
@@ -228,7 +231,7 @@ namespace ACMESharp.Providers.IIS
                 var matchAddress = string.IsNullOrEmpty(bindingAddress)
                         || string.Equals(_.BindingAddress, bindingAddress,
                                 StringComparison.InvariantCultureIgnoreCase);
-                var matchPort = int.Parse(_.BindingPort) == bindingPort;
+                var matchPort = _.BindingPort != null && int.Parse(_.BindingPort) == bindingPort;
                 var matchHost = string.IsNullOrEmpty(bindingHost)
                         || string.Equals(_.BindingHost, bindingHost,
                                 StringComparison.InvariantCultureIgnoreCase);

@@ -10,14 +10,14 @@
 
 @{
 	RootModule = 'ACMESharp.POSH.dll'
-	ModuleVersion = '0.8.2'
+	ModuleVersion = '0.9.2'
 	GUID = '244FAB9A-D367-4C0E-A088-FF3D34EDF713'
 	
 	Author = 'https://github.com/ebekker'
 
 	CompanyName = 'https://github.com/ebekker/ACMESharp'
 
-	Copyright = '(c) 2016 Eugene Bekker. All rights reserved.'	
+	Copyright = '(c) 2017 Eugene Bekker. All rights reserved.'	
 
 	Description = "Client library for the ACME protocol, which is used to interoperate with the Let's Encrypt project's CA server and any other ACME-compliant server."
 
@@ -56,7 +56,13 @@
 	} # End of PrivateData hashtable
 
 	# Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
-	NestedModules = @( "ACMESharp-Providers\ACMESharp-Providers.psd1" )
+	NestedModules = @( "ACMESharp-Extensions\ACMESharp-Extensions.psd1" )
+
+	# Assemblies that must be loaded prior to importing this module
+	#RequiredAssemblies = @( 'ACMESharp.dll' )
+
+	# Script files (.ps1) that are run in the caller's environment prior to importing this module.
+	#ScriptsToProcess = @( '_ModInit.ps1' )
 
 
 	############################################################
@@ -68,12 +74,6 @@
 
 	# Modules that must be imported into the global environment prior to importing this module
 	# RequiredModules = @()
-
-	# Assemblies that must be loaded prior to importing this module
-	# RequiredAssemblies = @()
-
-	# Script files (.ps1) that are run in the caller's environment prior to importing this module.
-	# ScriptsToProcess = @()
 
 	# Type files (.ps1xml) to be loaded when importing this module
 	# TypesToProcess = @()

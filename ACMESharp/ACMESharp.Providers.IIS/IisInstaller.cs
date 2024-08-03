@@ -45,6 +45,9 @@ namespace ACMESharp.Providers.IIS
         public bool Force
         { get; set; }
 
+        public bool KeepExistingSslFlags
+        { get; set; }
+
         public string CertificateFriendlyName
         { get; set; }
 
@@ -66,7 +69,7 @@ namespace ACMESharp.Providers.IIS
                         "found existing conflicting bindings for target site;"
                         + " use Force parameter to overwrite");
 
-            // TODO: should we expose these are optional params to be overridden by user?
+            // TODO: should we expose these as optional params to be overridden by user?
             var storeLocation = StoreLocation.LocalMachine;
             var storeName = StoreName.My;
             var cert = ImportCertificate(pk, crt, chain, cp,
@@ -82,7 +85,7 @@ namespace ACMESharp.Providers.IIS
                 {
                     if (BindingHostRequired.HasValue)
                         oldBinding.BindingHostRequired = BindingHostRequired;
-                    IisHelper.UpdateSiteBinding(oldBinding, certStore, certHash);
+                    IisHelper.UpdateSiteBinding(oldBinding, certStore, certHash, keepExistingSslFlags: KeepExistingSslFlags);
                 }
             }
             else
@@ -133,8 +136,8 @@ namespace ACMESharp.Providers.IIS
                             X509KeyStorageFlags.PersistKeySet | flag |
                             X509KeyStorageFlags.Exportable);
 
-                    if (!string.IsNullOrEmpty(friendlyName))
-                        cert.FriendlyName = friendlyName;
+					if (!string.IsNullOrEmpty(friendlyName))
+						cert.FriendlyName = friendlyName;
 
                     store.Add(cert);
                     return cert;

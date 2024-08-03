@@ -1,36 +1,35 @@
-﻿using ACMESharp.POSH.Util;
+﻿using ACMESharp.PKI;
+using ACMESharp.Util;
 using ACMESharp.Vault;
 using ACMESharp.Vault.Model;
-using System;
-using System.IO;
-using System.Management.Automation;
-using ACMESharp.PKI;
 using ACMESharp.Vault.Util;
-using ACMESharp.Util;
+using System;
 using System.Collections;
-using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Management.Automation;
+using System.Text.RegularExpressions;
 
 namespace ACMESharp.POSH
 {
-    /// <summary>
-    /// <para type="synopsis">
-    ///   Initiates a request to issue a request for previously authorized Identifier.
-    /// </para>
-    /// <para type="description">
-    ///   This cmdlet is used to request a new certificate for a DNS Identifier
-    ///   that has already been verified by the ACME CA Server.  It is also used
-    ///   to import, generate or define the certificate parameters and artifacts
-    ///   needed for the request, such as the private key and CSR details.
-    /// </para>
-    /// <para type="link">New-Identifier</para>
-    /// <para type="link">Complete-Challenge</para>
-    /// </summary>
-    [Cmdlet(VerbsCommon.New, "Certificate", DefaultParameterSetName = PSET_DEFAULT)]
+	/// <summary>
+	/// <para type="synopsis">
+	///   Initiates a request to issue a request for previously authorized Identifier.
+	/// </para>
+	/// <para type="description">
+	///   This cmdlet is used to request a new certificate for a DNS Identifier
+	///   that has already been verified by the ACME CA Server.  It is also used
+	///   to import, generate or define the certificate parameters and artifacts
+	///   needed for the request, such as the private key and CSR details.
+	/// </para>
+	/// <para type="link">New-Identifier</para>
+	/// <para type="link">Complete-Challenge</para>
+	/// </summary>
+	[Cmdlet(VerbsCommon.New, "Certificate", DefaultParameterSetName = PSET_DEFAULT)]
     [OutputType(typeof(CertificateInfo))]
-    public class NewCertificate : Cmdlet
-    {
+    public class NewCertificate : AcmeCmdlet
+	{
         public const string PSET_DEFAULT = "Default";
         public const string PSET_GENERATE = "Generate";
 
@@ -129,6 +128,14 @@ namespace ACMESharp.POSH
 
         /// <summary>
         /// <para type="description">
+        ///   Indicates if the generated certificate request should use a 4096 bits key.
+        /// </para>
+        /// </summary>
+	    [Parameter(ParameterSetName = PSET_GENERATE, Mandatory = false)]
+        public SwitchParameter NumBits4096 { get; set; }
+
+        /// <summary>
+        /// <para type="description">
         ///   An optional, unique alias to assign to the Certificate for future
         ///   reference.
         /// </para>
@@ -209,6 +216,8 @@ namespace ACMESharp.POSH
                         csrDtlValues = x => !string.IsNullOrEmpty(csrDtlValue(x))
                                 ? Regex.Split(csrDtlValue(x).Trim(), "[\\s,;]+") : null;
                     }
+
+                    if (NumBits4096) ci.NumBits = 4096;
 
                     var csrDetails = new CsrDetails
                     {

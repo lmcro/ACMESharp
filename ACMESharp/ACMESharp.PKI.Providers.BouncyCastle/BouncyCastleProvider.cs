@@ -377,18 +377,19 @@ namespace ACMESharp.PKI.Providers
                 var bcPk = FromPrivatePem(rsaPk.Pem);
 
                 var pfx = new Pkcs12Store();
-                pfx.SetCertificateEntry(bcCerts[0].Certificate.ToString(), bcCerts[0]);
-                pfx.SetKeyEntry(bcCerts[0].Certificate.ToString(),
-                        new AsymmetricKeyEntry(bcPk.Private), new[] { bcCerts[0] });
+				pfx.SetCertificateEntry(bcCerts[0].Certificate.SubjectDN.ToString(), bcCerts[0]);
+				pfx.SetKeyEntry(bcCerts[0].Certificate.SubjectDN.ToString(),
+						new AsymmetricKeyEntry(bcPk.Private), new[] { bcCerts[0] });
 
                 for (int i = 1; i < bcCerts.Length; ++i)
                 {
-                    pfx.SetCertificateEntry(bcCerts[i].Certificate.SubjectDN.ToString(),
-                            bcCerts[i]);
+					//pfx.SetCertificateEntry(bcCerts[i].Certificate.SubjectDN.ToString(),
+					pfx.SetCertificateEntry(i.ToString(), bcCerts[i]);
                 }
 
-                pfx.Save(target, password?.ToCharArray(), new SecureRandom());
-            }
+				// It used to be pretty straight forward to export this...
+				pfx.Save(target, password?.ToCharArray(), new SecureRandom());
+			}
             else
             {
                 throw new NotSupportedException("unsupported archive format");

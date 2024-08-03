@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using ACMESharp.ACME;
+using System;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Management;
 
-namespace ACMESharp.ACME.Providers
+namespace ACMESharp.Providers.Windows
 {
 	public class MSDNSChallengeHandler : IChallengeHandler
 	{
@@ -14,8 +12,9 @@ namespace ACMESharp.ACME.Providers
 			get; private set;
 		}
 
-		public void CleanUp(Challenge c)
+		public void CleanUp(ChallengeHandlingContext ctx)
 		{
+			throw new NotSupportedException("provider does not support clean up");
 		}
 
 		public void Dispose()
@@ -23,9 +22,9 @@ namespace ACMESharp.ACME.Providers
 			IsDisposed = true;
 		}
 
-		public void Handle(Challenge c)
+		public void Handle(ChallengeHandlingContext ctx)
 		{
-			DnsChallenge dnsChallenge = c as DnsChallenge;
+			DnsChallenge dnsChallenge = ctx.Challenge as DnsChallenge;
 
 			ManagementScope mgmtScope = new ManagementScope(@"\\.\Root\MicrosoftDNS");
 			ManagementClass mgmtClass = null;
@@ -53,6 +52,9 @@ namespace ACMESharp.ACME.Providers
 
 					break;
 				}
+
+				ctx.Out.WriteLine("Updated DNS record of type [TXT] with name [{0}]",
+						dnsChallenge.RecordName);
 			}
 			else if (mgmtDNSRecords.Count == 0)
 			{
@@ -65,6 +67,9 @@ namespace ACMESharp.ACME.Providers
 				mgmtParams["DescriptiveText"] = dnsChallenge.RecordValue;
 
 				mgmtClass.InvokeMethod("CreateInstanceFromPropertyData", mgmtParams, null);
+
+				ctx.Out.WriteLine("Created DNS record of type [TXT] with name [{0}]",
+						dnsChallenge.RecordName);
 			}
 			else
 			{
